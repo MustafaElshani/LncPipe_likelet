@@ -1030,8 +1030,6 @@ process Identify_novel_lncRNA_with_criterions {
 /*
 *Step 9: Predict coding potential abilities using CPAT and PLEK (CNCI functionality coming soon!)
 */
-novelLncRnaFasta.into { NovelLncRnaFasta_for_PLEK; NovelLncRnaFasta_for_CPAT; }
-
 process Predict_coding_abilities_by_PLEK {
     input:
     file novel_lncRNA_fasta from NovelLncRnaFasta_for_PLEK
@@ -1052,6 +1050,7 @@ process Predict_coding_abilities_by_PLEK {
     exit 0
     """
 }
+
 process Predict_coding_abilities_by_CPAT {
     input:
     file novel_lncRNA_fasta from NovelLncRnaFasta_for_CPAT
