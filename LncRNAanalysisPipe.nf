@@ -1030,25 +1030,31 @@ process Identify_novel_lncRNA_with_criterions {
 /*
 *Step 9: Predict coding potential abilities using CPAT and PLEK (CNCI functionality coming soon!)
 */
+novelLncRnaFasta.into { NovelLncRnaFasta_for_PLEK; NovelLncRnaFasta_for_CPAT; }
+
 process Predict_coding_abilities_by_PLEK {
+    
+    // Handle exit status manually since PLEK may not return a valid exit status
+    errorStrategy 'ignore'
+    
     input:
     file novel_lncRNA_fasta from NovelLncRnaFasta_for_PLEK
     output:
     file "novel.longRNA.PLEK.out" into Novel_longRNA_PLEK_result
-    script:
-    plek_threads = task.cpus - 1
-    def validExitStatusList = [0, 1, 2]
-    """
-    PLEK.py -fasta ${novel_lncRNA_fasta} \
-                               -out novel.longRNA.PLEK.out \
-                               -thread ${plek_threads}
-    exit_status=\$?
-    if [[ ! "${validExitStatusList[@]}" =~ "\${exit_status}" ]]; then
-        echo "Error: PLEK exit status not in ${validExitStatusList}" >&2
+    shell:
+    plek_threads = ava_cpu - 1
+    '''
+    PLEK.py -fasta !{novel_lncRNA_fasta} \
+            -out novel.longRNA.PLEK.out \
+            -thread !{plek_threads}
+    exit_status=$?
+    if [[ $exit_status -eq 0 || $exit_status -eq 1 || $exit_status -eq 2 ]]; then
+        exit 0
+    else
+        echo "Error: Unexpected exit status $exit_status"
         exit 1
     fi
-    exit 0
-    """
+    '''
 }
 
 process Predict_coding_abilities_by_CPAT {
