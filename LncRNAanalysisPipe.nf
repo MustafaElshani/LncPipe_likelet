@@ -1033,22 +1033,24 @@ process Identify_novel_lncRNA_with_criterions {
 novelLncRnaFasta.into { NovelLncRnaFasta_for_PLEK; NovelLncRnaFasta_for_CPAT; }
 
 process Predict_coding_abilities_by_PLEK {
-    
-    // as PLEK can not return valid exit status even run smoothly, we manually set the exit status into 0 to promote analysis
-    validExitStatus 0, 1, 2
     input:
     file novel_lncRNA_fasta from NovelLncRnaFasta_for_PLEK
     output:
     file "novel.longRNA.PLEK.out" into Novel_longRNA_PLEK_result
-    shell:
-    plek_threads = ava_cpu- 1
-    '''
-        PLEK.py -fasta !{novel_lncRNA_fasta} \
-                                   -out novel.longRNA.PLEK.out \
-                                   -thread !{plek_threads}
-	    exit 0
-        '''
-
+    script:
+    plek_threads = task.cpus - 1
+    def validExitStatusList = [0, 1, 2]
+    """
+    PLEK.py -fasta ${novel_lncRNA_fasta} \
+                               -out novel.longRNA.PLEK.out \
+                               -thread ${plek_threads}
+    exit_status=\$?
+    if [[ ! "${validExitStatusList[@]}" =~ "\${exit_status}" ]]; then
+        echo "Error: PLEK exit status not in ${validExitStatusList}" >&2
+        exit 1
+    fi
+    exit 0
+    """
 }
 process Predict_coding_abilities_by_CPAT {
     input:
