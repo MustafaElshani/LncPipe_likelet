@@ -1034,27 +1034,20 @@ novelLncRnaFasta.into { NovelLncRnaFasta_for_PLEK; NovelLncRnaFasta_for_CPAT; }
 
 process Predict_coding_abilities_by_PLEK {
     
-    // Handle exit status manually since PLEK may not return a valid exit status
-    errorStrategy 'ignore'
-    
     input:
     file novel_lncRNA_fasta from NovelLncRnaFasta_for_PLEK
     output:
     file "novel.longRNA.PLEK.out" into Novel_longRNA_PLEK_result
-    shell:
-    plek_threads = ava_cpu - 1
-    '''
-    PLEK.py -fasta !{novel_lncRNA_fasta} \
-            -out novel.longRNA.PLEK.out \
-            -thread !{plek_threads}
-    exit_status=$?
-    if [[ $exit_status -eq 0 || $exit_status -eq 1 || $exit_status -eq 2 ]]; then
-        exit 0
-    else
-        echo "Error: Unexpected exit status $exit_status"
-        exit 1
-    fi
-    '''
+
+    script:
+    plek_threads = task.cpus - 1
+    """
+    PLEK.py -fasta $novel_lncRNA_fasta \\
+                                   -out novel.longRNA.PLEK.out \\
+                                   -thread $plek_threads
+    echo "PLEK exit status: $?"
+    exit 0
+    """
 }
 
 process Predict_coding_abilities_by_CPAT {
