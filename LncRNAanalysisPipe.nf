@@ -1033,24 +1033,23 @@ process Identify_novel_lncRNA_with_criterions {
 novelLncRnaFasta.into { NovelLncRnaFasta_for_PLEK; NovelLncRnaFasta_for_CPAT; }
 
 process Predict_coding_abilities_by_PLEK {
+    
+    // Allow PLEK to fail without stopping the pipeline
+    errorStrategy 'ignore'
+    
     input:
     file novel_lncRNA_fasta from NovelLncRnaFasta_for_PLEK
     output:
     file "novel.longRNA.PLEK.out" into Novel_longRNA_PLEK_result
-    script:
-    plek_threads = task.cpus - 1
-    """
-    #!/usr/bin/env bash
-    set +e
-    PLEK.py -fasta ${novel_lncRNA_fasta} \
-                   -out novel.longRNA.PLEK.out \
-                   -thread ${plek_threads}
-    exit_status=\$?
-    set -e
-    if [ $exit_status -ne 0 ] && [ $exit_status -ne 1 ] && [ $exit_status -ne 2 ]; then
-        exit $exit_status
-    fi
-    """
+    shell:
+    plek_threads = ava_cpu - 1
+    '''
+        PLEK.py -fasta !{novel_lncRNA_fasta} \
+                                   -out novel.longRNA.PLEK.out \
+                                   -thread !{plek_threads}
+	    exit 0
+        '''
+
 }
 
 process Predict_coding_abilities_by_CPAT {
