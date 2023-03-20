@@ -1034,8 +1034,8 @@ novelLncRnaFasta.into { NovelLncRnaFasta_for_PLEK; NovelLncRnaFasta_for_CPAT; }
 
 process Predict_coding_abilities_by_PLEK {
     
-    // Allow PLEK to fail without stopping the pipeline
-    errorStrategy 'ignore'
+    // Allow PLEK to fail with exit status 99 without stopping the pipeline
+    errorStrategy { task.exitStatus == 0 ? 'ignore' : 'terminate' }
     
     input:
     file novel_lncRNA_fasta from NovelLncRnaFasta_for_PLEK
